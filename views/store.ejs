@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Магазин - Список товаров</title>
+    <link rel="stylesheet" href="/styles_store.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tiny-slider/2.9.3/tiny-slider.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/">Главная</a></li>
+                <li><a href="/news">Новости</a></li>
+                <li><a href="/courses">Курсы</a></li>
+                <li><a href="/store">Магазин</a></li>
+                <li><a href="/reviews">Отзывы</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <h1>Магазин - Список товаров</h1>
+        <a href="/store/create" class="btn-add">Создать новый товар</a>
+        <div class="item-list">
+            <% if (items && items.length > 0) { %>
+                <% items.forEach(item => { %>
+                    <div class="item">
+                        <h2><%= item.item_name %></h2>
+                        <p><%= item.item_description %></p>
+                        <p><%= item.item_price %> руб.</p>
+                        <div class="item-images">
+                            <% if (item.images && item.images.length > 0) { %>
+                                <div class="carousel">
+                                    <% item.images.forEach(image => { %>
+                                        <img src="/uploads/<%= image %>" alt="<%= item.item_name %>">
+                                    <% }); %>
+                                </div>
+                            <% } %>
+                        </div>
+                        <div class="item-actions">
+                            <a href="/store/edit/<%= item.id %>" class="btn-edit">Изменить</a>
+                            <form action="/store/delete/<%= item.id %>" method="post" style="display:inline;">
+                                <button type="submit" class="btn-delete" onclick="return confirm('Вы уверены, что хотите удалить этот товар?');">Удалить</button>
+                            </form>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <p>Товары не найдены.</p>
+            <% } %>
+        </div>
+    </main>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tiny-slider/2.9.3/min/tiny-slider.js"></script>
+    <script>
+        var sliders = document.querySelectorAll('.carousel');
+        sliders.forEach(slider => {
+            var tnsSlider = tns({
+                container: slider,
+                items: 1,
+                slideBy: 'page',
+                autoplay: true, 
+                autoplayTimeout: 3000, 
+                autoplayHoverPause: true, 
+                nav: true,
+                controls: false,
+                loop: true,
+                speed: 600, 
+                mode: 'carousel' 
+            });
+        });
+    </script>
+</body>
+</html>

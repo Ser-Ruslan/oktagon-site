@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Курсы</title>
+    <link rel="stylesheet" href="/styles_courses.css"> 
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/">Главная</a></li>
+                <li><a href="/news">Новости</a></li>
+                <li><a href="/courses">Курсы</a></li>
+                <li><a href="/store">Магазин</a></li>
+                <li><a href="/reviews">Отзывы</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <h1>Курсы</h1>
+        <a href="/courses/create" class="btn-add">Добавить курс</a>
+        <ul class="course-list">
+            <% if (courses.length > 0) { %>
+                <% courses.forEach(course => { %>
+                    <% 
+                        const discount = course.discount;
+                        const oldPrice = course.price;
+                        const newPrice = discount > 0 ? (oldPrice * (1 - discount / 100)).toFixed(2) : oldPrice;
+                    %>
+                    <li class="course-item">
+                        <h2><%= course.name %></h2>
+                        <p><%= course.description %></p>
+                        <p>
+                            <% if (discount > 0) { %>
+                                <span class="old-price"><%= oldPrice %> руб.</span>
+                                <span class="new-price"><%= newPrice %> руб.</span>
+                                <span class="discount">(-<%= discount %>%)</span>
+                            <% } else { %>
+                                <span class="new-price"><%= oldPrice %> руб.</span>
+                            <% } %>
+                        </p>
+                        <div class="course-actions">
+                            <a href="/courses/edit/<%= course.id %>" class="btn-edit">Изменить</a>
+                            <form action="/courses/delete/<%= course.id %>" method="post" style="display:inline;">
+                                <button type="submit" class="btn-delete" onclick="return confirm('Вы уверены, что хотите удалить этот курс?');">Удалить</button>
+                            </form>
+                        </div>
+                    </li>
+                <% }); %>
+            <% } else { %>
+                <p>Курсы не найдены.</p>
+            <% } %>
+        </ul>
+    </main>
+</body>
+</html>

@@ -1,0 +1,193 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+}
+
+header {
+    background-color: #333;
+    color: #fff;
+    padding: 10px 0;
+}
+
+nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+}
+
+nav ul li {
+    margin: 0 15px;
+}
+
+nav ul li a {
+    color: #fff;
+    text-decoration: none;
+    padding: 10px 15px;
+    display: block;
+}
+
+nav ul li a:hover {
+    background-color: #444546;
+    border-radius: 4px;
+}
+
+
+main {
+    padding: 20px;
+    max-width: 900px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.course-list {
+    list-style: none;
+    padding: 0;
+}
+
+.course-item {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.course-item h2 {
+    margin-top: 0;
+    color: #333;
+}
+
+.course-actions {
+    margin-top: 10px;
+}
+
+.btn-add, .btn-edit, .btn-delete {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.btn-add:hover, .btn-edit:hover, .btn-delete:hover {
+    background-color: #0056b3;
+}
+
+.btn-delete {
+    background-color: #dc3545;
+}
+
+.btn-delete:hover {
+    background-color: #c82333;
+}
+
+
+.btn-submit {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.btn-submit:hover {
+    background-color: #0056b3;
+}
+
+.btn-cancel {
+    display: inline-block;
+    background-color: #6c757d;
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+.btn-cancel:hover {
+    background-color: #5a6268;
+}
+
+.btn-delete-file {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.btn-delete-file:hover {
+    background-color: #c82333;
+}
+
+
+.old-price {
+    text-decoration: line-through;
+    color: red;
+    margin-right: 10px;
+}
+
+.new-price {
+    font-weight: bold;
+    color: green;
+    font-size: 1.2em;
+}
+
+.discount {
+    color: blue;
+    font-weight: bold;
+    margin-left: 10px;
+    font-size: 1em;
+}
+
+
+.course-form-container {
+    padding: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.course-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.course-form label {
+    margin: 10px 0 5px;
+    font-weight: bold;
+}
+
+.course-form input[type="text"],
+.course-form input[type="number"],
+.course-form input[type="date"],
+.course-form textarea {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.course-form textarea {
+    resize: vertical;
+}
+
+.course-form button,
+.course-form a.btn-cancel {
+    align-self: flex-start;
+}

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Редактировать курс</title>
+    <link rel="stylesheet" href="/styles_courses.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/">Главная</a></li>
+                <li><a href="/news">Новости</a></li>
+                <li><a href="/courses">Курсы</a></li>
+                <li><a href="/store">Магазин</a></li>
+                <li><a href="/reviews">Отзывы</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <div class="course-form-container">
+            <h1>Редактировать курс</h1>
+            <form class="course-form" action="/courses/edit/<%= course.id %>" method="post">
+                <div class="form-group">
+                    <label for="name" class="form-label">Название курса:</label>
+                    <input type="text" id="name" name="name" value="<%= course.name %>" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="description" class="form-label">Описание:</label>
+                    <textarea id="description" name="description" class="form-textarea" required><%= course.description %></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="price" class="form-label">Цена:</label>
+                    <input type="text" id="price" name="price" value="<%= course.price %>" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="discount" class="form-label">Скидка (%):</label>
+                    <input type="number" id="discount" name="discount" value="<%= course.discount %>" min="0" max="100" step="0.01" class="form-input">
+                </div>
+                
+                <div class="form-group">
+                    <label for="discountExpiry" class="form-label">Дата окончания скидки:</label>
+                    <input type="date" id="discountExpiry" name="discountExpiry" value="<%= course.discount_expiry %>" class="form-input">
+                </div>
+                
+                <button type="submit" class="btn-submit">Сохранить изменения</button>
+                <a href="/courses" class="btn-cancel">Отмена</a>
+            </form>
+        </div>
+    </main>
+</body>
+</html>

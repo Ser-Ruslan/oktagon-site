@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Добавить новость</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/">Главная</a></li>
+                <li><a href="/news">Новости</a></li>
+                <li><a href="/courses">Курсы</a></li>
+                <li><a href="/store">Магазин</a></li>
+                <li><a href="/reviews">Отзывы</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main class="main-form">
+        <h1>Добавить новость</h1>
+        <form action="/news" method="post" enctype="multipart/form-data">
+            <label for="title">Заголовок:</label>
+            <input type="text" id="title" name="title" required><br>
+
+            <label for="content">Содержание:</label>
+            <textarea id="content" name="content" required></textarea><br>
+
+            <label for="image">Изображение:</label>
+            <input type="file" id="image" name="image"><br>
+
+            <label for="materials">Материалы:</label>
+            <input type="file" id="materials" name="materials" multiple><br>
+
+            <button type="submit" class="btn-submit">Добавить новость</button>
+        </form>
+    </main>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Новости</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="/">Главная</a></li>
+                <li><a href="/news">Новости</a></li>
+                <li><a href="/courses">Курсы</a></li>
+                <li><a href="/store">Магазин</a></li>
+                <li><a href="/reviews">Отзывы</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main class="main-news-list">
+        <h1>Новости</h1>
+        <ul class="news-list">
+            <% news.forEach(item => { %>
+                <li class="news-item">
+                    <% if (item.image_path) { %>
+                        <img src="/uploads/<%= item.image_path %>" alt="Image for <%= item.title %>" class="news-image">
+                    <% } %>
+                    <h2><%= item.title %></h2>
+                    <p><%= item.content %></p>
+                    <div class="news-actions">
+                        <a href="/news/edit/<%= item.id %>" class="btn-edit">Изменить</a>
+                        <form action="/news/delete/<%= item.id %>" method="post" style="display:inline;">
+                            <button type="submit" class="btn-delete" onclick="return confirm('Вы уверены, что хотите удалить эту новость?');">Удалить</button>
+                        </form>
+                    </div>
+                    <% if (item.files && item.files.length > 0) { %>
+                        <h3>Прикрепленные файлы:</h3>
+                        <ul class="file-list">
+                            <% item.files.forEach(file => { %>
+                                <li>
+                                    <a href="/uploads/<%= file.file_name %>" download><%= file.file_name %></a>
+                                    <form action="/news/delete-file/<%= file.id %>" method="post" style="display:inline;">
+                                        <button type="submit" class="btn-delete-file" onclick="return confirm('Вы уверены, что хотите удалить этот файл?');">Удалить файл</button>
+                                    </form>
+                                </li>
+                            <% }); %>
+                        </ul>
+                    <% } %>
+                </li>
+            <% }); %>
+        </ul>
+        <a href="/news/create" class="btn-add">Добавить новость</a>
+    </main>
+</body>
+</html>
