@@ -6,14 +6,9 @@ const fs = require('fs');
 const bodyParser = require('body-parser');
 const ejs = require('ejs');
 const axios = require('axios');
-const TelegramBot = require('node-telegram-bot-api');
 
 const app = express();
 const port = 3000;
-
-
-const telegramBotToken = '7363437148:AAHecv5tqcoTEvhMuFS1swyj1BfatGmHpGs';
-const bot = new TelegramBot(telegramBotToken);
 
 
 const storage = multer.diskStorage({
@@ -97,27 +92,6 @@ app.post('/news', upload.fields([{ name: 'image', maxCount: 1 }, { name: 'materi
             });
         }
         res.redirect('/news');
-        
-        
-        db.query('SELECT chat_id FROM subscriptions WHERE type = "news"', (err, users) => {
-            if (err) {
-                console.error('Error fetching subscribers for news:', err);
-                return;
-            }
-
-            const chatIds = users.map(user => user.chat_id);
-            const message = `📢 Новая новость добавлена: ${title}\n${content}`;
-
-            chatIds.forEach(chatId => {
-                bot.sendMessage(chatId, message)
-                    .then(() => {
-                        console.log(`Notification sent to chat ID: ${chatId}`);
-                    })
-                    .catch(error => {
-                        console.error('Error sending notification:', error);
-                    });
-            });
-        });
     });
 });
 
@@ -227,7 +201,7 @@ app.post('/news/delete/:id', (req, res) => {
 app.get('/courses', (req, res) => {
     db.query('SELECT * FROM courses', (err, courses) => {
         if (err) throw err;
-        res.render('courses', { courses });
+        res.render('courses', { courses }); 
     });
 });
 
@@ -236,43 +210,22 @@ app.get('/courses/create', (req, res) => {
     res.render('create-course');
 });
 
-app.post('/courses', (req, res) => {
+app.post('/courses/create', (req, res) => {
     const { name, description, price, discount, discountExpiry } = req.body;
 
-    db.query('INSERT INTO courses (name, description, price, discount, discount_expiry) VALUES (?, ?, ?, ?, ?)', [name, description, price, discount || null, discountExpiry || null], (err) => {
+    db.query('INSERT INTO courses (name, description, price, discount, discount_expiry) VALUES (?, ?, ?, ?, ?)', [name, description, price, discount, discountExpiry || null], (err) => {
         if (err) throw err;
         res.redirect('/courses');
-        
-        
-        db.query('SELECT chat_id FROM subscriptions WHERE type = "course"', (err, users) => {
-            if (err) {
-                console.error('Error fetching subscribers for course:', err);
-                return;
-            }
-
-            const chatIds = users.map(user => user.chat_id);
-            const message = `📚 Новый курс добавлен: ${name}\nОписание: ${description}\nЦена: ${price}\nСкидка: ${discount || 'Нет'}`;
-
-            chatIds.forEach(chatId => {
-                bot.sendMessage(chatId, message)
-                    .then(() => {
-                        console.log(`Notification sent to chat ID: ${chatId}`);
-                    })
-                    .catch(error => {
-                        console.error('Error sending notification:', error);
-                    });
-            });
-        });
     });
 });
 
 
 app.get('/courses/edit/:id', (req, res) => {
     const courseId = req.params.id;
-    db.query('SELECT * FROM courses WHERE id = ?', [courseId], (err, courses) => {
+    db.query('SELECT * FROM courses WHERE id = ?', [courseId], (err, course) => {
         if (err) throw err;
-        if (courses.length > 0) {
-            res.render('edit-course', { course: courses[0] });
+        if (course.length > 0) {
+            res.render('edit-course', { course: course[0] });
         } else {
             res.status(404).send('Курс не найден');
         }
@@ -292,7 +245,6 @@ app.post('/courses/edit/:id', (req, res) => {
 
 app.post('/courses/delete/:id', (req, res) => {
     const courseId = req.params.id;
-
     db.query('DELETE FROM courses WHERE id = ?', [courseId], (err) => {
         if (err) throw err;
         res.redirect('/courses');
@@ -300,87 +252,180 @@ app.post('/courses/delete/:id', (req, res) => {
 });
 
 
-app.post('/api/discounts/update', (req, res) => {
-    const { courseId, newDiscount } = req.body;
-
-    db.query('UPDATE courses SET discount = ? WHERE id = ?', [newDiscount, courseId], (err) => {
-        if (err) {
-            console.error('Error updating discount:', err);
-            res.status(500).send('Error updating discount');
-            return;
+app.get('/store', (req, res) => {
+    db.query('SELECT * FROM store', (err, items) => {
+        if (err) throw err;
+        
+        if (!items) {
+            items = [];
         }
 
-        db.query('SELECT chat_id FROM subscriptions WHERE type = "course"', (err, users) => {
-            if (err) {
-                console.error('Error fetching users for discount notification:', err);
-                res.status(500).send('Error fetching users');
-                return;
-            }
-
-            const chatIds = users.map(user => user.chat_id);
-            const message = `🔔 Обновление скидки: Курс ID ${courseId} теперь со скидкой ${newDiscount}.`;
-
-            chatIds.forEach(chatId => {
-                bot.sendMessage(chatId, message)
-                    .then(() => {
-                        console.log(`Notification sent to chat ID: ${chatId}`);
-                    })
-                    .catch(error => {
-                        console.error('Error sending notification:', error);
-                    });
+        
+        const itemsWithImages = items.map(item => {
+            return new Promise((resolve, reject) => {
+                db.query('SELECT image_url FROM item_images WHERE item_id = ?', [item.id], (err, images) => {
+                    if (err) reject(err);
+                    item.images = images.map(img => img.image_url);
+                    resolve(item);
+                });
             });
+        });
 
-            res.send('Discount updated and notifications sent');
+        Promise.all(itemsWithImages).then(items => {
+            res.render('store', { items });
+        }).catch(err => {
+            res.status(500).send('Ошибка при загрузке товаров');
         });
     });
 });
 
 
-app.post('/subscriptions/add', (req, res) => {
-    const { chatId, type } = req.body;
 
-    if (!['news', 'course', 'product'].includes(type)) {
-        return res.status(400).send('Invalid subscription type');
-    }
 
-    db.query('INSERT IGNORE INTO subscriptions (chat_id, type) VALUES (?, ?)', [chatId, type], (err) => {
-        if (err) {
-            console.error('Error adding subscription:', err);
-            res.status(500).send('Error adding subscription');
-            return;
-        }
-
-        res.send('Subscription added');
-    });
+app.get('/store/create', (req, res) => {
+    res.render('create_item');
 });
 
-app.post('/subscriptions/remove', (req, res) => {
-    const { chatId, type } = req.body;
-
-    if (!['news', 'course', 'product'].includes(type)) {
-        return res.status(400).send('Invalid subscription type');
-    }
-
-    db.query('DELETE FROM subscriptions WHERE chat_id = ? AND type = ?', [chatId, type], (err) => {
-        if (err) {
-            console.error('Error removing subscription:', err);
-            res.status(500).send('Error removing subscription');
-            return;
-        }
-
-        res.send('Subscription removed');
-    });
-});
-
-
-app.get('/subscriptions', (req, res) => {
-    db.query('SELECT * FROM subscriptions', (err, subscriptions) => {
+app.post('/store/create', upload.array('item_images', 5), (req, res) => {
+    const { item_name, item_description, item_price } = req.body;
+    db.query('INSERT INTO store (item_name, item_description, item_price) VALUES (?, ?, ?)', 
+    [item_name, item_description, item_price], (err, results) => {
         if (err) throw err;
-        res.json(subscriptions);
+        const storeId = results.insertId;
+        const images = req.files.map(file => [storeId, file.filename]);
+        if (images.length > 0) {
+            db.query('INSERT INTO item_images (item_id, image_url) VALUES ?', [images], (err) => {
+                if (err) throw err;
+                res.redirect('/store');
+            });
+        } else {
+            res.redirect('/store');
+        }
+    });
+});
+
+
+
+app.get('/store/edit/:id', (req, res) => {
+    const itemId = req.params.id;
+    db.query('SELECT * FROM store WHERE id = ?', [itemId], (err, item) => {
+        if (err) throw err;
+        if (item.length > 0) {
+            db.query('SELECT image_url FROM item_images WHERE item_id = ?', [itemId], (err, images) => {
+                if (err) throw err;
+                res.render('edit_item', { item: item[0], images });
+            });
+        } else {
+            res.status(404).send('Товар не найден');
+        }
+    });
+});
+
+app.post('/store/edit/:id', upload.array('item_images', 5), (req, res) => {
+    const itemId = req.params.id;
+    const { item_name, item_description, item_price } = req.body;
+
+    db.query('UPDATE store SET item_name = ?, item_description = ?, item_price = ? WHERE id = ?', 
+    [item_name, item_description, item_price, itemId], (err) => {
+        if (err) throw err;
+
+        if (req.files.length > 0) {
+            db.query('SELECT image_url FROM item_images WHERE item_id = ?', [itemId], (err, images) => {
+                if (err) throw err;
+
+              
+                images.forEach(image => {
+                    const filePath = path.join(__dirname, 'uploads', image.image_url);
+                    fs.unlink(filePath, (err) => {
+                        if (err) console.error('Error removing old image:', err);
+                    });
+                });
+
+                db.query('DELETE FROM item_images WHERE item_id = ?', [itemId], (err) => {
+                    if (err) throw err;
+                    const newImages = req.files.map(file => [itemId, file.filename]);
+                    db.query('INSERT INTO item_images (item_id, image_url) VALUES ?', [newImages], (err) => {
+                        if (err) throw err;
+                        res.redirect('/store');
+                    });
+                });
+            });
+        } else {
+            res.redirect('/store');
+        }
+    });
+});
+
+
+
+app.post('/store/delete/:id', (req, res) => {
+    const itemId = req.params.id;
+    db.query('SELECT image_url FROM item_images WHERE item_id = ?', [itemId], (err, images) => {
+        if (err) throw err;
+
+      
+        images.forEach(image => {
+            const filePath = path.join(__dirname, 'uploads', image.image_url);
+            fs.unlink(filePath, (err) => {
+                if (err) console.error('Error removing image:', err);
+            });
+        });
+
+        db.query('DELETE FROM item_images WHERE item_id = ?', [itemId], (err) => {
+            if (err) throw err;
+            db.query('DELETE FROM store WHERE id = ?', [itemId], (err) => {
+                if (err) throw err;
+                res.redirect('/store');
+            });
+        });
+    });
+});
+
+const sendNotification = (category, message) => {
+    db.query('SELECT user_id FROM subscriptions WHERE category = ?', [category], (err, results) => {
+        if (err) throw err;
+        results.forEach(row => {
+            const userId = row.user_id;
+            axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                chat_id: userId,
+                text: message
+            }).catch(err => console.error('Error sending message:', err));
+        });
+    });
+};
+
+
+app.get('/reviews', (req, res) => {
+    db.query('SELECT * FROM reviews', (err, reviews) => {
+        if (err) throw err;
+        res.render('reviews', { reviews });
+    });
+});
+
+app.get('/api/courses', (req, res) => {
+    db.query('SELECT * FROM courses ORDER BY id DESC LIMIT 10', (err, courses) => {
+        if (err) throw err;
+        res.json(courses);
+    });
+});
+
+
+app.get('/api/products', (req, res) => {
+    db.query('SELECT * FROM products ORDER BY id DESC LIMIT 10', (err, products) => {
+        if (err) throw err;
+        res.json(products);
+    });
+});
+
+
+app.get('/api/news', (req, res) => {
+    db.query('SELECT * FROM news ORDER BY id DESC LIMIT 10', (err, news) => {
+        if (err) throw err;
+        res.json(news);
     });
 });
 
 
 app.listen(port, () => {
-    console.log(`Сервер запущен на http://localhost:${port}`);
+    console.log(`Сервер запущен на ${port}`);
 });
