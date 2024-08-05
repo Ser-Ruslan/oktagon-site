@@ -1,5 +1,6 @@
 const TelegramBot = require('node-telegram-bot-api');
 const mysql = require('mysql2');
+const fs = require('fs');
 
 
 const token = '7363437148:AAHecv5tqcoTEvhMuFS1swyj1BfatGmHpGs';
@@ -18,6 +19,17 @@ db.connect((err) => {
     console.log('БД подключена успешно');
 });
 
+bot.setMyCommands([
+    { command: '/start', description: 'Приветственное сообщение' },
+    { command: '/help', description: 'Список доступных команд' },
+    { command: '/subscribe', description: 'Подписаться на новости, курсы или товары' },
+    { command: '/unsubscribe', description: 'Отписаться от подписки' },
+    { command: '/news', description: 'Получить список новостей' },
+    { command: '/courses', description: 'Получить список курсов' },
+    { command: '/products', description: 'Получить список товаров' },
+    { command: '/creator', description: 'Узнать автора бота' }
+]);
+
 
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
@@ -34,19 +46,35 @@ bot.onText(/\/help/, (msg) => {
         '/unsubscribe [type] - Отписаться от [news, course, product]\n' +
         '/news - Получить новости\n' +
         '/courses - Получить список курсов\n' +
-        '/products - Получить список товаров');
+        '/products - Получить список товаров\n'+
+        '/creator - Узнать автора бота\n'+
+        '/site - Получить ссылку на сайт');
 });
 
-bot.setMyCommands([
-    { command: '/start', description: 'Приветственное сообщение' },
-    { command: '/help', description: 'Список доступных команд' },
-    { command: '/subscribe', description: 'Подписаться на новости, курсы или товары' },
-    { command: '/unsubscribe', description: 'Отписаться от подписки' },
-    { command: '/news', description: 'Получить список новостей' },
-    { command: '/courses', description: 'Получить список курсов' },
-    { command: '/products', description: 'Получить список товаров' }
-]);
+bot.onText(/\/site/, (msg) => {
+    const chatId = msg.chat.id;
+    const siteUrl = 'http://localhost:3000/'; 
+    bot.sendMessage(chatId, `Перейдите на сайт по этой ссылке: ${siteUrl}`);
+});
 
+bot.onText(/\/creator/, (msg) => {
+    const chatId = msg.chat.id;
+
+    
+    fs.readFile('package.json', (err, data) => {
+        if (err) {
+            bot.sendMessage(chatId, 'Произошла ошибка при чтении данных.');
+            return console.error(err);
+        }
+
+        const packageJson = JSON.parse(data);
+        const authorName = packageJson.author.name;
+        const authorLastName = packageJson.author['last name'];
+        const authorFullName = `${authorName} ${authorLastName}`;
+        
+        bot.sendMessage(chatId, `Автор бота: ${authorFullName}`);
+    });
+});
 
 bot.onText(/\/subscribe/, (msg) => {
     const chatId = msg.chat.id;

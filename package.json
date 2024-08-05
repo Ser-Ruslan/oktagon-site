@@ -1,15 +1,14 @@
 {
   "name": "oktagon-site",
   "version": "1.0.0",
-  "main": "index.js",
+  "author": {
+    "name": "Ruslan",
+    "last name": "Alexandrov"
+},
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js"
   },
-  "keywords": [],
-  "author": "Ruslan Alexandrov",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
     "axios": "^1.7.2",
     "bcryptjs": "^2.4.3",
