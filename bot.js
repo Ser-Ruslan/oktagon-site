@@ -37,6 +37,16 @@ bot.onText(/\/help/, (msg) => {
         '/products - Получить список товаров');
 });
 
+bot.setMyCommands([
+    { command: '/start', description: 'Приветственное сообщение' },
+    { command: '/help', description: 'Список доступных команд' },
+    { command: '/subscribe', description: 'Подписаться на новости, курсы или товары' },
+    { command: '/unsubscribe', description: 'Отписаться от подписки' },
+    { command: '/news', description: 'Получить список новостей' },
+    { command: '/courses', description: 'Получить список курсов' },
+    { command: '/products', description: 'Получить список товаров' }
+]);
+
 
 bot.onText(/\/subscribe/, (msg) => {
     const chatId = msg.chat.id;
@@ -102,28 +112,36 @@ bot.on('message', (msg) => {
 });
 
 
-bot.onText(/\/news/, (msg) => {
+bot.onText(/\/news/, async (msg) => {
     const chatId = msg.chat.id;
-    db.query('SELECT * FROM news', (err, news) => {
-        if (err) {
-            console.error('Error fetching news:', err);
-            bot.sendMessage(chatId, 'Ошибка при получении новостей.');
-            return;
-        }
+    try {
+        const [rows] = await db.promise().query('SELECT * FROM news');
+        for (const item of rows) {
+            let newsMessage = `*${item.title}*\n${item.content}\n`;
 
-        if (news.length === 0) {
-            bot.sendMessage(chatId, 'Нет новостей для отображения.');
-        } else {
-            news.forEach(item => {
-                let message = `*${item.title}*\n${item.content}\n\n`;
-                bot.sendMessage(chatId, message, { parse_mode: 'Markdown' });
-
-                if (item.image_path) {
-                    bot.sendPhoto(chatId, `http://localhost:3000/uploads/${item.image_path}`);
+            
+            if (item.image_path) {
+                const imageUrl = `http://localhost:3000/uploads/${item.image_path}`;
+                try {
+                    await bot.sendPhoto(chatId, imageUrl);
+                } catch (err) {
+                    console.error(`Error sending photo ${imageUrl}:`, err);
+                    bot.sendMessage(chatId, 'Ошибка при отправке изображения.');
                 }
-            });
+            }
+
+            
+            if (item.file_name) {
+                const fileUrl = `http://localhost:3000/uploads/${item.file_name}`;
+                newsMessage += `\nМатериалы:\n- [${item.file_name}](${fileUrl})\n`;
+            }
+
+            bot.sendMessage(chatId, newsMessage, { parse_mode: 'Markdown' });
         }
-    });
+    } catch (error) {
+        console.error(error);
+        bot.sendMessage(chatId, 'Произошла ошибка при получении новостей.');
+    }
 });
 
 
