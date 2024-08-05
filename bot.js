@@ -1,11 +1,11 @@
 const TelegramBot = require('node-telegram-bot-api');
 const mysql = require('mysql2');
 
-// Создание бота
+
 const token = '7363437148:AAHecv5tqcoTEvhMuFS1swyj1BfatGmHpGs';
 const bot = new TelegramBot(token, { polling: true });
 
-// Подключение к базе данных
+
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
@@ -18,13 +18,13 @@ db.connect((err) => {
     console.log('Connected to MySQL database');
 });
 
-// Обработка команды /start
+
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
     bot.sendMessage(chatId, 'Добро пожаловать! Для получения списка доступных команд используйте /help.');
 });
 
-// Обработка команды /help
+
 bot.onText(/\/help/, (msg) => {
     const chatId = msg.chat.id;
     bot.sendMessage(chatId, 'Вот доступные команды:\n\n' +
@@ -37,7 +37,7 @@ bot.onText(/\/help/, (msg) => {
         '/products - Получить список товаров');
 });
 
-// Обработка команды /subscribe
+
 bot.onText(/\/subscribe/, (msg) => {
     const chatId = msg.chat.id;
     bot.sendMessage(chatId, 'Выберите, на что вы хотите подписаться:', {
@@ -101,7 +101,7 @@ bot.on('message', (msg) => {
     }
 });
 
-// Обработка команды /news
+
 bot.onText(/\/news/, (msg) => {
     const chatId = msg.chat.id;
     db.query('SELECT * FROM news', (err, news) => {
@@ -126,7 +126,7 @@ bot.onText(/\/news/, (msg) => {
     });
 });
 
-// Обработка команды /courses
+
 bot.onText(/\/courses/, (msg) => {
     const chatId = msg.chat.id;
     db.query('SELECT * FROM courses', (err, courses) => {
@@ -147,7 +147,7 @@ bot.onText(/\/courses/, (msg) => {
     });
 });
 
-// Обработка команды /products
+
 bot.onText(/\/products/, (msg) => {
     const chatId = msg.chat.id;
     db.query('SELECT * FROM store', (err, store) => {

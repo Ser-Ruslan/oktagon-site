@@ -11,11 +11,11 @@ const TelegramBot = require('node-telegram-bot-api');
 const app = express();
 const port = 3000;
 
-// Создайте объект TelegramBot с вашим токеном
-const telegramBotToken = 'YOUR_TELEGRAM_BOT_TOKEN';
+
+const telegramBotToken = '7363437148:AAHecv5tqcoTEvhMuFS1swyj1BfatGmHpGs';
 const bot = new TelegramBot(telegramBotToken);
 
-// Конфигурация multer для загрузки изображений и материалов
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'uploads');
@@ -27,7 +27,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Подключение к базе данных
+
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
@@ -40,13 +40,13 @@ db.connect((err) => {
     console.log('Connected to MySQL database');
 });
 
-// Настройка Express
+
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Обработчик главной страницы
+
 app.get('/', (req, res) => {
     res.render('index');
 });
@@ -98,7 +98,7 @@ app.post('/news', upload.fields([{ name: 'image', maxCount: 1 }, { name: 'materi
         }
         res.redirect('/news');
         
-        // Notify subscribers
+        
         db.query('SELECT chat_id FROM subscriptions WHERE type = "news"', (err, users) => {
             if (err) {
                 console.error('Error fetching subscribers for news:', err);
@@ -382,5 +382,5 @@ app.get('/subscriptions', (req, res) => {
 
 // Запуск сервера
 app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
+    console.log(`Сервер запущен на http://localhost:${port}`);
 });
