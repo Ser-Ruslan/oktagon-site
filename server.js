@@ -51,7 +51,7 @@ app.get('/', (req, res) => {
     res.render('index');
 });
 
-// Обработчик страницы новостей
+
 app.get('/news', (req, res) => {
     db.query('SELECT * FROM news', (err, news) => {
         if (err) throw err;
@@ -76,7 +76,7 @@ app.get('/news', (req, res) => {
     });
 });
 
-// Обработчик создания новости
+
 app.get('/news/create', (req, res) => {
     res.render('create-news');
 });
@@ -121,7 +121,7 @@ app.post('/news', upload.fields([{ name: 'image', maxCount: 1 }, { name: 'materi
     });
 });
 
-// Обработчик редактирования новости
+
 app.get('/news/edit/:id', (req, res) => {
     const newsId = req.params.id;
     db.query('SELECT * FROM news WHERE id = ?', [newsId], (err, news) => {
@@ -175,7 +175,7 @@ app.post('/news/edit/:id', upload.fields([{ name: 'image', maxCount: 1 }, { name
     });
 });
 
-// Обработчик удаления файла
+
 app.post('/news/delete-file/:id', (req, res) => {
     const fileId = req.params.id;
     db.query('SELECT file_name FROM files WHERE id = ?', [fileId], (err, files) => {
@@ -196,7 +196,7 @@ app.post('/news/delete-file/:id', (req, res) => {
     });
 });
 
-// Обработчик удаления новости
+
 app.post('/news/delete/:id', (req, res) => {
     const newsId = req.params.id;
 
@@ -223,7 +223,7 @@ app.post('/news/delete/:id', (req, res) => {
     });
 });
 
-// Обработчик страницы курсов
+
 app.get('/courses', (req, res) => {
     db.query('SELECT * FROM courses', (err, courses) => {
         if (err) throw err;
@@ -231,7 +231,7 @@ app.get('/courses', (req, res) => {
     });
 });
 
-// Обработчик страницы создания курса
+
 app.get('/courses/create', (req, res) => {
     res.render('create-course');
 });
@@ -243,7 +243,7 @@ app.post('/courses', (req, res) => {
         if (err) throw err;
         res.redirect('/courses');
         
-        // Notify subscribers
+        
         db.query('SELECT chat_id FROM subscriptions WHERE type = "course"', (err, users) => {
             if (err) {
                 console.error('Error fetching subscribers for course:', err);
@@ -266,7 +266,7 @@ app.post('/courses', (req, res) => {
     });
 });
 
-// Обработчик редактирования курса
+
 app.get('/courses/edit/:id', (req, res) => {
     const courseId = req.params.id;
     db.query('SELECT * FROM courses WHERE id = ?', [courseId], (err, courses) => {
@@ -289,7 +289,7 @@ app.post('/courses/edit/:id', (req, res) => {
     });
 });
 
-// Обработчик удаления курса
+
 app.post('/courses/delete/:id', (req, res) => {
     const courseId = req.params.id;
 
@@ -299,7 +299,7 @@ app.post('/courses/delete/:id', (req, res) => {
     });
 });
 
-// Обработчик обновления скидок
+
 app.post('/api/discounts/update', (req, res) => {
     const { courseId, newDiscount } = req.body;
 
@@ -335,7 +335,7 @@ app.post('/api/discounts/update', (req, res) => {
     });
 });
 
-// Обработчик подписки на новости, курсы и товары
+
 app.post('/subscriptions/add', (req, res) => {
     const { chatId, type } = req.body;
 
@@ -372,7 +372,7 @@ app.post('/subscriptions/remove', (req, res) => {
     });
 });
 
-// Команда для списка всех подписок (по типам)
+
 app.get('/subscriptions', (req, res) => {
     db.query('SELECT * FROM subscriptions', (err, subscriptions) => {
         if (err) throw err;
@@ -380,7 +380,7 @@ app.get('/subscriptions', (req, res) => {
     });
 });
 
-// Запуск сервера
+
 app.listen(port, () => {
     console.log(`Сервер запущен на http://localhost:${port}`);
 });
