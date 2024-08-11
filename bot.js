@@ -140,6 +140,7 @@ bot.on('message', (msg) => {
 });
 
 
+
 bot.onText(/\/news/, async (msg) => {
     const chatId = msg.chat.id;
     try {

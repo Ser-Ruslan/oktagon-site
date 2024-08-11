@@ -6,6 +6,13 @@ const fs = require('fs');
 const bodyParser = require('body-parser');
 const ejs = require('ejs');
 const axios = require('axios');
+const TelegramBot = require('node-telegram-bot-api');
+const botToken = '7363437148:AAHecv5tqcoTEvhMuFS1swyj1BfatGmHpGs'; 
+const bot = new TelegramBot(botToken);
+
+
+
+
 
 const app = express();
 const port = 3000;
@@ -91,6 +98,7 @@ app.post('/news', upload.fields([{ name: 'image', maxCount: 1 }, { name: 'materi
                 });
             });
         }
+        sendNotification('news', `Новая новость: ${title}\n${content}`);
         res.redirect('/news');
     });
 });
@@ -215,6 +223,7 @@ app.post('/courses/create', (req, res) => {
 
     db.query('INSERT INTO courses (name, description, price, discount, discount_expiry) VALUES (?, ?, ?, ?, ?)', [name, description, price, discount, discountExpiry || null], (err) => {
         if (err) throw err;
+        sendNotification('course', `Новый курс: ${name}\n${description}`);
         res.redirect('/courses');
     });
 });
@@ -296,9 +305,11 @@ app.post('/store/create', upload.array('item_images', 5), (req, res) => {
         if (images.length > 0) {
             db.query('INSERT INTO item_images (item_id, image_url) VALUES ?', [images], (err) => {
                 if (err) throw err;
+                sendNotification('product', `Новый товар: ${item_name}\n${item_description}`);
                 res.redirect('/store');
             });
         } else {
+            sendNotification('product', `Новый товар: ${item_name}\n${item_description}`);
             res.redirect('/store');
         }
     });
@@ -382,17 +393,22 @@ app.post('/store/delete/:id', (req, res) => {
 });
 
 const sendNotification = (category, message) => {
-    db.query('SELECT user_id FROM subscriptions WHERE category = ?', [category], (err, results) => {
-        if (err) throw err;
+    db.query('SELECT chat_id FROM subscriptions WHERE type = ?', [category], (err, results) => {
+        if (err) {
+            console.error('Ошибка при получении подписчиков:', err);
+            return;
+        }
+
         results.forEach(row => {
-            const userId = row.user_id;
-            axios.post(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
-                chat_id: userId,
-                text: message
-            }).catch(err => console.error('Error sending message:', err));
+            const chatId = row.chat_id;
+            bot.sendMessage(chatId, message)
+                .catch(err => console.error('Ошибка при отправке сообщения:', err));
         });
     });
 };
+
+
+
 
 
 app.get('/reviews', (req, res) => {
