@@ -21,8 +21,9 @@
         <ul>
             <% reviews.forEach(review => { %>
                 <li>
-                    <h2><%= review.title %></h2>
-                    <p><%= review.content %></p>
+                    <h2><%= review.reviewer_name %></h2>
+                    <p><%= review.review_content %></p>
+                    <small><%= new Date(review.created_at).toLocaleString() %></small>
                 </li>
             <% }); %>
         </ul>

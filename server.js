@@ -412,9 +412,14 @@ const sendNotification = (category, message) => {
 
 
 app.get('/reviews', (req, res) => {
-    db.query('SELECT * FROM reviews', (err, reviews) => {
-        if (err) throw err;
-        res.render('reviews', { reviews });
+    const query = 'SELECT reviewer_name, review_content, created_at FROM reviews ORDER BY created_at DESC';
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Ошибка при получении отзывов:', err);
+            res.status(500).send('Ошибка сервера');
+            return;
+        }
+        res.render('reviews', { reviews: results });
     });
 });
 
