@@ -27,7 +27,8 @@ bot.setMyCommands([
     { command: '/products', description: 'Получить список товаров' },
     { command: '/review', description: 'Написать отзыв' },
     { command: '/creator', description: 'Узнать автора бота' },
-    { command: '/site', description: 'Получить ссылку на сайт' }
+    { command: '/site', description: 'Получить ссылку на сайт' },
+    { command: '/stats', description: 'Получить статистику подписок' }
 ]);
 
 bot.onText(/\/start/, (msg) => {
@@ -47,7 +48,8 @@ bot.onText(/\/help/, (msg) => {
         '/products - Получить список товаров\n' +
         '/creator - Узнать автора бота\n' +
         '/review - Написать отзыв\n' +
-        '/site - Получить ссылку на сайт');
+        '/site - Получить ссылку на сайт\n' +
+        '/stats - Получить статистику подписок');
 });
 
 bot.onText(/\/site/, (msg) => {
@@ -125,8 +127,24 @@ bot.onText(/\/unsubscribe/, (msg) => {
 
     bot.once('message', (msg) => {
         const text = msg.text;
-        if (text === 'Новости' || text === 'Курсы' || text === 'Товары') {
-            const type = text.toLowerCase();
+        let type;
+
+        switch (text) {
+            case 'Новости':
+                type = 'news';
+                break;
+            case 'Курсы':
+                type = 'course';
+                break;
+            case 'Товары':
+                type = 'product';
+                break;
+            default:
+                type = null;
+                break;
+        }
+
+        if (type) {
             db.query('DELETE FROM subscriptions WHERE chat_id = ? AND type = ?', [chatId, type], (err) => {
                 if (err) {
                     console.error('Error removing subscription:', err);
@@ -148,6 +166,7 @@ bot.onText(/\/unsubscribe/, (msg) => {
         }
     });
 });
+
 
 bot.onText(/\/news/, async (msg) => {
     const chatId = msg.chat.id;
@@ -231,4 +250,25 @@ bot.onText(/\/review/, (msg) => {
             bot.sendMessage(chatId, 'Ваш отзыв успешно сохранен. Спасибо!');
         });
     });
+});
+
+bot.onText(/\/stats/, async (msg) => {
+    const chatId = msg.chat.id;
+    try {
+        const [newsSubscriptions] = await db.promise().query('SELECT COUNT(*) AS count FROM subscriptions WHERE type = ?', ['news']);
+        const [coursesSubscriptions] = await db.promise().query('SELECT COUNT(*) AS count FROM subscriptions WHERE type = ?', ['course']);
+        const [productsSubscriptions] = await db.promise().query('SELECT COUNT(*) AS count FROM subscriptions WHERE type = ?', ['product']);
+
+        const newsCount = newsSubscriptions[0].count;
+        const coursesCount = coursesSubscriptions[0].count;
+        const productsCount = productsSubscriptions[0].count;
+
+        bot.sendMessage(chatId, `Статистика подписок:\n\n` +
+            `Новости: ${newsCount} пользователей\n` +
+            `Курсы: ${coursesCount} пользователей\n` +
+            `Товары: ${productsCount} пользователей`);
+    } catch (err) {
+        console.error('Error fetching statistics:', err);
+        bot.sendMessage(chatId, 'Ошибка при получении статистики.');
+    }
 });
