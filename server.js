@@ -205,14 +205,33 @@ app.post('/news/delete/:id', (req, res) => {
     });
 });
 
+const moment = require('moment');
 
 app.get('/courses', (req, res) => {
     db.query('SELECT * FROM courses', (err, courses) => {
-        if (err) throw err;
-        res.render('courses', { courses }); 
+        if (err) {
+            console.error('Ошибка получения курсов:', err);
+            return res.status(500).send('Ошибка сервера');
+        }
+
+        
+        courses = courses.map(course => {
+            const discountExpiry = moment(course.discount_expiry); 
+            const currentDate = moment(); 
+
+            
+            if (discountExpiry.isAfter(currentDate)) {
+                course.isDiscountActive = true;
+            } else {
+                course.isDiscountActive = false;
+            }
+
+            return course;
+        });
+
+        res.render('courses', { courses });
     });
 });
-
 
 app.get('/courses/create', (req, res) => {
     res.render('create-course');
@@ -264,12 +283,7 @@ app.post('/courses/delete/:id', (req, res) => {
 app.get('/store', (req, res) => {
     db.query('SELECT * FROM store', (err, items) => {
         if (err) throw err;
-        
-        if (!items) {
-            items = [];
-        }
 
-        
         const itemsWithImages = items.map(item => {
             return new Promise((resolve, reject) => {
                 db.query('SELECT image_url FROM item_images WHERE item_id = ?', [item.id], (err, images) => {
@@ -280,15 +294,15 @@ app.get('/store', (req, res) => {
             });
         });
 
-        Promise.all(itemsWithImages).then(items => {
-            res.render('store', { items });
-        }).catch(err => {
-            res.status(500).send('Ошибка при загрузке товаров');
-        });
+        Promise.all(itemsWithImages)
+            .then(items => {
+                res.render('store', { items });
+            })
+            .catch(err => {
+                res.status(500).send('Ошибка при загрузке товаров');
+            });
     });
 });
-
-
 
 
 app.get('/store/create', (req, res) => {
@@ -297,24 +311,26 @@ app.get('/store/create', (req, res) => {
 
 app.post('/store/create', upload.array('item_images', 5), (req, res) => {
     const { item_name, item_description, item_price } = req.body;
-    db.query('INSERT INTO store (item_name, item_description, item_price) VALUES (?, ?, ?)', 
-    [item_name, item_description, item_price], (err, results) => {
-        if (err) throw err;
-        const storeId = results.insertId;
-        const images = req.files.map(file => [storeId, file.filename]);
-        if (images.length > 0) {
-            db.query('INSERT INTO item_images (item_id, image_url) VALUES ?', [images], (err) => {
-                if (err) throw err;
+    db.query(
+        'INSERT INTO store (item_name, item_description, item_price) VALUES (?, ?, ?)', 
+        [item_name, item_description, item_price], 
+        (err, results) => {
+            if (err) throw err;
+            const storeId = results.insertId;
+            const images = req.files.map(file => [storeId, file.filename]);
+            if (images.length > 0) {
+                db.query('INSERT INTO item_images (item_id, image_url) VALUES ?', [images], (err) => {
+                    if (err) throw err;
+                    sendNotification('product', `Новый товар: ${item_name}\n${item_description}`);
+                    res.redirect('/store');
+                });
+            } else {
                 sendNotification('product', `Новый товар: ${item_name}\n${item_description}`);
                 res.redirect('/store');
-            });
-        } else {
-            sendNotification('product', `Новый товар: ${item_name}\n${item_description}`);
-            res.redirect('/store');
+            }
         }
-    });
+    );
 });
-
 
 
 app.get('/store/edit/:id', (req, res) => {
@@ -334,37 +350,40 @@ app.get('/store/edit/:id', (req, res) => {
 
 app.post('/store/edit/:id', upload.array('item_images', 5), (req, res) => {
     const itemId = req.params.id;
-    const { item_name, item_description, item_price } = req.body;
+    const { item_name, item_description, item_price } = req.body; 
 
-    db.query('UPDATE store SET item_name = ?, item_description = ?, item_price = ? WHERE id = ?', 
-    [item_name, item_description, item_price, itemId], (err) => {
-        if (err) throw err;
+    db.query(
+        'UPDATE store SET item_name = ?, item_description = ?, item_price = ? WHERE id = ?', 
+        [item_name, item_description, item_price, itemId], 
+        (err) => {
+            if (err) throw err;
 
-        if (req.files.length > 0) {
-            db.query('SELECT image_url FROM item_images WHERE item_id = ?', [itemId], (err, images) => {
-                if (err) throw err;
-
-              
-                images.forEach(image => {
-                    const filePath = path.join(__dirname, 'uploads', image.image_url);
-                    fs.unlink(filePath, (err) => {
-                        if (err) console.error('Error removing old image:', err);
-                    });
-                });
-
-                db.query('DELETE FROM item_images WHERE item_id = ?', [itemId], (err) => {
+            if (req.files.length > 0) {
+                db.query('SELECT image_url FROM item_images WHERE item_id = ?', [itemId], (err, images) => {
                     if (err) throw err;
-                    const newImages = req.files.map(file => [itemId, file.filename]);
-                    db.query('INSERT INTO item_images (item_id, image_url) VALUES ?', [newImages], (err) => {
+
+                    images.forEach(image => {
+                        const filePath = path.join(__dirname, 'uploads', image.image_url);
+                        fs.unlink(filePath, (err) => {
+                            if (err) console.error('Ошибка при удалении изображения:', err);
+                        });
+                    });
+
+                    db.query('DELETE FROM item_images WHERE item_id = ?', [itemId], (err) => {
                         if (err) throw err;
-                        res.redirect('/store');
+
+                        const newImages = req.files.map(file => [itemId, file.filename]);
+                        db.query('INSERT INTO item_images (item_id, image_url) VALUES ?', [newImages], (err) => {
+                            if (err) throw err;
+                            res.redirect('/store');
+                        });
                     });
                 });
-            });
-        } else {
-            res.redirect('/store');
+            } else {
+                res.redirect('/store');
+            }
         }
-    });
+    );
 });
 
 
@@ -374,11 +393,10 @@ app.post('/store/delete/:id', (req, res) => {
     db.query('SELECT image_url FROM item_images WHERE item_id = ?', [itemId], (err, images) => {
         if (err) throw err;
 
-      
         images.forEach(image => {
             const filePath = path.join(__dirname, 'uploads', image.image_url);
             fs.unlink(filePath, (err) => {
-                if (err) console.error('Error removing image:', err);
+                if (err) console.error('Ошибка при удалении изображения:', err);
             });
         });
 
@@ -387,6 +405,24 @@ app.post('/store/delete/:id', (req, res) => {
             db.query('DELETE FROM store WHERE id = ?', [itemId], (err) => {
                 if (err) throw err;
                 res.redirect('/store');
+            });
+        });
+    });
+});
+
+
+app.post('/store/delete-image/:imageId', (req, res) => {
+    const imageId = req.params.imageId;
+    db.query('SELECT image_url FROM item_images WHERE id = ?', [imageId], (err, images) => {
+        if (err) throw err;
+        const image = images[0];
+        const filePath = path.join(__dirname, 'uploads', image.image_url);
+        fs.unlink(filePath, (err) => {
+            if (err) console.error('Ошибка при удалении изображения:', err);
+
+            db.query('DELETE FROM item_images WHERE id = ?', [imageId], (err) => {
+                if (err) throw err;
+                res.redirect('back');  
             });
         });
     });

@@ -88,7 +88,24 @@ bot.onText(/\/subscribe/, (msg) => {
 
     bot.once('message', (msg) => {
         const text = msg.text;
-        if (text === 'Новости' || text === 'Курсы' || text === 'Товары') {
+
+        switch (text) {
+            case 'Новости':
+                type = 'news';
+                break;
+            case 'Курсы':
+                type = 'course';
+                break;
+            case 'Товары':
+                type = 'product';
+                break;
+            default:
+                type = null;
+                break;
+        }
+
+
+        if (text === 'news' || text === 'course' || text === 'product') {
             const type = text.toLowerCase();
             db.query('INSERT IGNORE INTO subscriptions (chat_id, type) VALUES (?, ?)', [chatId, type], (err) => {
                 if (err) {
@@ -110,7 +127,61 @@ bot.onText(/\/subscribe/, (msg) => {
             });
         }
     });
+});bot.onText(/\/subscribe/, (msg) => {
+    const chatId = msg.chat.id;
+    bot.sendMessage(chatId, 'Выберите, на что вы хотите подписаться:', {
+        reply_markup: {
+            keyboard: [
+                ['Новости', 'Курсы', 'Товары'],
+                ['Отмена']
+            ],
+            resize_keyboard: true,
+            one_time_keyboard: true
+        }
+    });
+
+    bot.once('message', (msg) => {
+        const text = msg.text;
+
+        let type;
+        switch (text) {
+            case 'Новости':
+                type = 'news';
+                break;
+            case 'Курсы':
+                type = 'course';
+                break;
+            case 'Товары':
+                type = 'product';
+                break;
+            default:
+                type = null;
+                break;
+        }
+
+        if (type) {
+            db.query('INSERT IGNORE INTO subscriptions (chat_id, type) VALUES (?, ?)', [chatId, type], (err) => {
+                if (err) {
+                    console.error('Error adding subscription:', err);
+                    bot.sendMessage(chatId, `Ошибка при добавлении подписки на ${type}.`);
+                } else {
+                    bot.sendMessage(chatId, `Вы подписаны на ${text.toLowerCase()}.`, {
+                        reply_markup: {
+                            remove_keyboard: true
+                        }
+                    });
+                }
+            });
+        } else if (text === 'Отмена') {
+            bot.sendMessage(chatId, 'Операция отменена.', {
+                reply_markup: {
+                    remove_keyboard: true
+                }
+            });
+        }
+    });
 });
+
 
 bot.onText(/\/unsubscribe/, (msg) => {
     const chatId = msg.chat.id;

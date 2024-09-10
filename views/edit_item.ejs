@@ -1,10 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Редактировать товар</title>
-    <link rel="stylesheet" href="/styles_store.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <title>Изменить товар</title>
+    <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
     <header>
@@ -18,55 +16,42 @@
             </ul>
         </nav>
     </header>
-    <main>
-        <div class="item-form-container">
-            <h1>Редактировать товар</h1>
-            <form class="item-form" action="/store/edit/<%= item.id %>" method="post" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="item_name" class="form-label">Название товара:</label>
-                    <input type="text" id="item_name" name="item_name" value="<%= item.item_name %>" class="form-input" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="item_description" class="form-label">Описание:</label>
-                    <textarea id="item_description" name="item_description" class="form-textarea" required><%= item.item_description %></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label for="item_price" class="form-label">Цена:</label>
-                    <input type="number" id="item_price" name="item_price" value="<%= item.item_price %>" step="0.01" class="form-input" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="item_images" class="form-label">Изображения товара (добавить новые):</label>
-                    <input type="file" id="item_images" name="item_images" class="form-file" multiple>
-                    <div class="current-images">
-                        <p>Текущие изображения:</p>
-                        <% if (item.images && item.images.length > 0) { %>
-                            <% item.images.forEach(image => { %>
-                                <div class="image-preview">
-                                    <img src="/uploads/<%= image %>" alt="<%= item.item_name %>" class="preview-image">
-                                    <button type="button" class="btn-remove-image" onclick="removeImage('<%= image %>')"><i class="fas fa-trash"></i></button>
-                                </div>
-                            <% }); %>
-                        <% } else { %>
-                            <p>Изображения отсутствуют</p>
-                        <% } %>
-                    </div>
-                </div>
+    <main class="main-form">
+        <h1>Изменить товар</h1>
+        <form action="/store/edit/<%= item.id %>" method="post" enctype="multipart/form-data">
+            <label for="title">Название товара:</label>
+            <input type="text" id="title" name="title" value="<%= item.item_name %>" required><br>
 
-                <button type="submit" class="btn-submit">Сохранить изменения</button>
-                <a href="/store" class="btn-cancel">Отмена</a>
-            </form>
-        </div>
+            <label for="description">Описание товара:</label>
+            <textarea id="description" name="description" required><%= item.item_description %></textarea><br>
+
+            <label for="price">Цена:</label>
+            <input type="number" id="price" name="price" value="<%= item.item_price %>" required><br>
+
+            <label for="image">Новое изображение товара:</label>
+            <input type="file" id="image" name="image"><br>
+
+            <% if (images.length > 0) { %>
+                <h3>Существующие изображения:</h3>
+                <ul>
+                    <% images.forEach(image => { %>
+                        <li>
+                            <img src="/uploads/<%= image.image_url %>" alt="Product Image" style="max-width: 300px; max-height: 200px;"><br>
+                            <a href="/uploads/<%= image.image_url %>" download>Скачать</a>
+                            <form action="/store/delete-image/<%= image.id %>" method="post" style="display:inline;">
+                                <button type="submit" class="btn-delete-file" onclick="return confirm('Вы уверены, что хотите удалить это изображение?');">Удалить</button>
+                            </form>
+                        </li>
+                    <% }); %>
+                </ul>
+            <% } %>
+
+            <label for="additional_images">Дополнительные изображения:</label>
+            <input type="file" id="additional_images" name="additional_images" multiple><br>
+
+            <button type="submit" class="btn-submit">Сохранить изменения</button>
+            <a href="/store" class="btn-cancel">Отмена</a>
+        </form>
     </main>
-    <script>
-        function removeImage(imageUrl) {
-            if (confirm('Вы уверены, что хотите удалить это изображение?')) {
-                
-                alert('Изображение удалено: ' + imageUrl);
-            }
-        }
-    </script>
 </body>
 </html>

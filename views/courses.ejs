@@ -31,7 +31,7 @@
                         <h2><%= course.name %></h2>
                         <p><%= course.description %></p>
                         <p>
-                            <% if (discount > 0) { %>
+                            <% if (course.isDiscountActive && discount > 0) { %>
                                 <span class="old-price"><%= oldPrice %> руб.</span>
                                 <span class="new-price"><%= newPrice %> руб.</span>
                                 <span class="discount">(-<%= discount %>%)</span>
