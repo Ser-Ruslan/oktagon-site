@@ -7,7 +7,7 @@ const bodyParser = require('body-parser');
 const ejs = require('ejs');
 const axios = require('axios');
 const TelegramBot = require('node-telegram-bot-api');
-const botToken = '7363437148:AAHecv5tqcoTEvhMuFS1swyj1BfatGmHpGs'; 
+const botToken = ''; 
 const bot = new TelegramBot(botToken);
 
 
